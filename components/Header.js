@@ -93,19 +93,32 @@ export default function Header() {
               <span>info@kduworld.com</span>
             </a>
           </div>
-          <div className="hidden md:flex items-center gap-3">
-            <a href="#" className="hover:text-accent transition-colors">
-              <FaFacebookF size={12} />
-            </a>
-            <a href="#" className="hover:text-accent transition-colors">
-              <FaLinkedinIn size={12} />
-            </a>
-            <a href="#" className="hover:text-accent transition-colors">
-              <FaYoutube size={12} />
-            </a>
-            <a href="#" className="hover:text-accent transition-colors">
-              <FaXTwitter size={12} />
-            </a>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/inquiry-cart"
+              className="relative text-white p-1 hover:text-accent transition-colors"
+            >
+              <FiShoppingCart size={14} />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+            <div className="hidden md:flex items-center gap-3">
+              <a href="#" className="hover:text-accent transition-colors">
+                <FaFacebookF size={12} />
+              </a>
+              <a href="#" className="hover:text-accent transition-colors">
+                <FaLinkedinIn size={12} />
+              </a>
+              <a href="#" className="hover:text-accent transition-colors">
+                <FaYoutube size={12} />
+              </a>
+              <a href="#" className="hover:text-accent transition-colors">
+                <FaXTwitter size={12} />
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -165,26 +178,13 @@ export default function Header() {
             ))}
           </ul>
 
-          {/* Cart + Mobile Toggle */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/inquiry-cart"
-              className="relative text-white p-2 hover:text-accent transition-colors"
-            >
-              <FiShoppingCart size={20} />
-              {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden text-white p-2"
-            >
-              {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-            </button>
-          </div>
+          {/* Mobile Toggle */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="lg:hidden text-white p-2"
+          >
+            {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
         </div>
 
       </nav>
