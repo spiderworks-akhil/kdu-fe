@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import {
@@ -7,6 +7,9 @@ import {
   FiDownload,
   FiX,
   FiChevronDown,
+  FiAnchor,
+  FiLifeBuoy,
+  FiSun,
 } from "react-icons/fi";
 import PageHeroBanner from "@/components/PageHeroBanner";
 import { markets, getMarketBySlug } from "@/lib/marketData";
@@ -22,11 +25,33 @@ export async function getStaticProps({ params }) {
   return { props: { market, otherMarkets } };
 }
 
+const sectorIcons = [FiAnchor, FiLifeBuoy, FiSun];
+const sectorBgs = ["bg-section-bg", "bg-white", "bg-section-bg"];
+
 export default function MarketDetail({ market, otherMarkets }) {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
+  const [activeNav, setActiveNav] = useState(0);
+
+  // Scroll-spy: highlight active sector in sticky nav
+  useEffect(() => {
+    if (!market.detailedServices?.length) return;
+    const handleScroll = () => {
+      const offsets = market.detailedServices.map((_, i) => {
+        const el = document.getElementById(`sector-${i}`);
+        return el ? el.getBoundingClientRect().top : Infinity;
+      });
+      let active = 0;
+      for (let i = offsets.length - 1; i >= 0; i--) {
+        if (offsets[i] <= 200) { active = i; break; }
+      }
+      setActiveNav(active);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [market.detailedServices]);
 
   const toggleAccordion = (index) => {
     setOpenAccordion(openAccordion === index ? null : index);
@@ -104,131 +129,116 @@ export default function MarketDetail({ market, otherMarkets }) {
         </div>
       </section>
 
-      {/* Market Segments (if any) */}
-      {market.segments.length > 0 && (
-        <section className="py-20 bg-section-bg">
+      {/* Sticky Sector Navigation */}
+      {market.detailedServices?.length > 0 && (
+        <nav className="sticky top-[100px] z-30 bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-14">
-              <p className="text-accent font-semibold text-sm uppercase tracking-widest mb-2">
-                Sectors
-              </p>
-              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-                Market Segments
-              </h2>
-              <div className="w-16 h-1 bg-accent mx-auto mb-6" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {market.segments.map((seg, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100"
-                >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-5">
-                    <span className="text-primary font-bold text-lg">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                  <h3 className="text-primary font-bold text-lg mb-3">
-                    {seg.name}
-                  </h3>
-                  <p className="text-text-gray text-sm leading-relaxed">
-                    {seg.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Detailed Services Accordion */}
-      {market.detailedServices?.map((section, si) => (
-        <section key={si} className="py-20 bg-section-bg">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-6">
-              <p className="text-accent font-semibold text-sm uppercase tracking-widest mb-2">
-                Detailed Overview
-              </p>
-              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-                {section.title}
-              </h2>
-              <div className="w-16 h-1 bg-accent mx-auto mb-6" />
-            </div>
-            <p className="text-text-gray leading-relaxed text-center max-w-4xl mx-auto mb-12">
-              {section.description}
-            </p>
-
-            <div className="space-y-4 max-w-4xl mx-auto">
-              {section.categories.map((cat, ci) => {
-                const isOpen = openAccordion === `${si}-${ci}`;
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+              {market.detailedServices.map((section, si) => {
+                const Icon = sectorIcons[si % sectorIcons.length];
                 return (
-                  <div
-                    key={ci}
-                    className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                  <a
+                    key={si}
+                    href={`#sector-${si}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document
+                        .getElementById(`sector-${si}`)
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold uppercase tracking-wider whitespace-nowrap border-b-2 transition-colors ${
+                      activeNav === si
+                        ? "border-accent text-primary"
+                        : "border-transparent text-text-gray hover:text-primary hover:border-gray-300"
+                    }`}
                   >
-                    <button
-                      onClick={() => toggleAccordion(`${si}-${ci}`)}
-                      className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-8 bg-accent rounded-full shrink-0" />
-                        <h3 className="text-primary font-bold text-lg">
-                          {cat.name}
-                        </h3>
-                      </div>
-                      <FiChevronDown
-                        size={20}
-                        className={`text-primary shrink-0 transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    <div
-                      className={`grid transition-all duration-300 ease-in-out ${
-                        isOpen
-                          ? "grid-rows-[1fr] opacity-100"
-                          : "grid-rows-[0fr] opacity-0"
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="px-6 pb-6 pt-2 space-y-5">
-                          {cat.subcategories.map((sub, subi) => (
-                            <div key={subi}>
-                              {sub.name && (
-                                <h4 className="text-primary font-semibold text-sm mb-3 uppercase tracking-wide">
-                                  {sub.name}
-                                </h4>
-                              )}
-                              <ul className="space-y-2">
-                                {sub.items.map((item, ii) => (
-                                  <li
-                                    key={ii}
-                                    className="flex items-start gap-3"
-                                  >
-                                    <FiCheckCircle
-                                      size={16}
-                                      className="text-accent shrink-0 mt-0.5"
-                                    />
-                                    <span className="text-text-gray text-sm leading-relaxed">
-                                      {item}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    <Icon size={16} />
+                    {section.title}
+                  </a>
                 );
               })}
             </div>
           </div>
-        </section>
-      ))}
+        </nav>
+      )}
+
+      {/* All Sectors — fully rendered for SEO */}
+      {market.detailedServices?.map((section, si) => {
+        const Icon = sectorIcons[si % sectorIcons.length];
+        return (
+          <section
+            key={si}
+            id={`sector-${si}`}
+            className={`py-20 ${sectorBgs[si % sectorBgs.length]} scroll-mt-[160px]`}
+          >
+            <div className="max-w-7xl mx-auto px-4">
+              {/* Sector Header */}
+              <div className="flex flex-col md:flex-row md:items-start gap-6 mb-12">
+                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shrink-0">
+                  <Icon size={24} className="text-accent" />
+                </div>
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary mb-3">
+                    {section.title}
+                  </h2>
+                  <p className="text-text-gray leading-relaxed max-w-3xl">
+                    {section.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Cards Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {section.categories.map((cat, ci) => (
+                  <div
+                    key={ci}
+                    className={`rounded-xl border border-gray-200 overflow-hidden shadow-sm ${
+                      si % 2 === 0 ? "bg-white" : "bg-section-bg"
+                    }`}
+                  >
+                    {/* Category Header */}
+                    <div className="bg-primary px-6 py-4 flex items-center gap-3">
+                      <div className="w-1.5 h-6 bg-accent rounded-full shrink-0" />
+                      <h3 className="text-white font-bold text-base">
+                        {cat.name}
+                      </h3>
+                    </div>
+
+                    {/* Category Items */}
+                    <div className="p-6 space-y-5">
+                      {cat.subcategories.map((sub, subi) => (
+                        <div key={subi}>
+                          {sub.name && (
+                            <h4 className="text-primary font-semibold text-xs mb-2.5 uppercase tracking-wider border-b border-gray-200 pb-2">
+                              {sub.name}
+                            </h4>
+                          )}
+                          <ul className="space-y-1.5">
+                            {sub.items.map((item, ii) => (
+                              <li
+                                key={ii}
+                                className="flex items-start gap-2.5"
+                              >
+                                <FiCheckCircle
+                                  size={13}
+                                  className="text-accent shrink-0 mt-0.5"
+                                />
+                                <span className="text-text-gray text-sm leading-relaxed">
+                                  {item}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })}
 
       {/* CTA */}
       <section className="py-16 bg-primary relative overflow-hidden">

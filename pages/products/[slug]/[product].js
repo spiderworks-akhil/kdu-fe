@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { FiArrowLeft, FiCheckCircle, FiDownload, FiFileText, FiMinus, FiPlus, FiShoppingCart } from "react-icons/fi";
+import { FiArrowLeft, FiCheckCircle, FiDownload, FiFileText, FiMinus, FiPlus, FiShoppingCart, FiSend, FiX } from "react-icons/fi";
 import { useInquiryCart } from "@/lib/InquiryCartContext";
 import PageHeroBanner from "@/components/PageHeroBanner";
 import {
@@ -11,6 +11,7 @@ import {
   getRelatedProducts,
   toSlug,
 } from "@/lib/productData";
+import { getPartnerLogos } from "@/lib/partnerData";
 
 export async function getStaticPaths() {
   const all = getAllProducts();
@@ -23,21 +24,46 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const product = getProductBySlug(params.slug, params.product);
   const related = getRelatedProducts(params.slug, params.product, 4);
-  return { props: { product, related } };
+
+  // Get unique manufacturers for this product's category
+  const category = productCategories.find((c) => c.slug === params.slug);
+  const manufacturers = new Set();
+  category?.subcategories.forEach((sub) => {
+    sub.items.forEach((item) => {
+      if (item.manufacturer) manufacturers.add(item.manufacturer);
+    });
+  });
+  const categoryPartners = getPartnerLogos([...manufacturers]);
+
+  return { props: { product, related, categoryPartners, categoryTitle: category?.title || "" } };
 }
 
-export default function ProductDetailPage({ product, related }) {
+export default function ProductDetailPage({ product, related, categoryPartners, categoryTitle }) {
   const hasImages = product.images && product.images.length > 0;
   const [activeImage, setActiveImage] = useState(
     hasImages ? product.images[0] : product.categoryImage
   );
   const [quantity, setQuantity] = useState(1);
   const [showAddedPopup, setShowAddedPopup] = useState(false);
+  const [showInquiryForm, setShowInquiryForm] = useState(false);
+  const [inquirySubmitted, setInquirySubmitted] = useState(false);
+  const [inquiryData, setInquiryData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
   const { addItem } = useInquiryCart();
 
   const handleAddToInquiry = () => {
     addItem(product, quantity);
     setShowAddedPopup(true);
+  };
+
+  const closeInquiryForm = () => {
+    setShowInquiryForm(false);
+    setInquirySubmitted(false);
+    setInquiryData({ name: "", email: "", phone: "", message: "" });
   };
 
   return (
@@ -192,6 +218,13 @@ export default function ProductDetailPage({ product, related }) {
                   <FiShoppingCart size={16} />
                   Add to Inquiry
                 </button>
+                <button
+                  onClick={() => setShowInquiryForm(true)}
+                  className="inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-lg text-sm uppercase tracking-wider transition-colors border-2 border-primary text-primary hover:bg-primary hover:text-white"
+                >
+                  <FiSend size={16} />
+                  Inquire Now
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -268,6 +301,41 @@ export default function ProductDetailPage({ product, related }) {
         </section>
       )}
 
+      {/* OEM / Manufacturer Partners */}
+      {categoryPartners && categoryPartners.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <p className="text-accent font-semibold text-sm uppercase tracking-widest mb-2">
+                Our Partners
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
+                {categoryTitle} OEM Partners
+              </h2>
+              <div className="w-16 h-1 bg-accent mx-auto mb-4" />
+              <p className="text-text-gray text-sm max-w-xl mx-auto">
+                We work with leading global manufacturers to deliver the best {categoryTitle.toLowerCase()} solutions.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {categoryPartners.map((partner) => (
+                <div
+                  key={partner.name}
+                  className="bg-section-bg rounded-xl border border-gray-100 p-4 h-24 flex items-center justify-center group hover:shadow-lg hover:border-accent/30 transition-all duration-300"
+                >
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Related Products */}
       {related.length > 0 && (
         <section className="py-20 bg-section-bg">
@@ -335,6 +403,144 @@ export default function ProductDetailPage({ product, related }) {
               >
                 Continue Browsing
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inquire Now Modal */}
+      {showInquiryForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={closeInquiryForm}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeInquiryForm}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <FiX size={22} />
+            </button>
+
+            <div className="p-8">
+              <h3 className="text-2xl font-bold text-primary mb-1">
+                Product Inquiry
+              </h3>
+              <p className="text-text-gray text-sm mb-6">
+                {product.name} — {product.manufacturer}
+              </p>
+
+              {inquirySubmitted ? (
+                <div className="text-center py-8">
+                  <FiCheckCircle
+                    size={48}
+                    className="text-green-500 mx-auto mb-4"
+                  />
+                  <h4 className="text-xl font-bold text-primary mb-2">
+                    Inquiry Submitted!
+                  </h4>
+                  <p className="text-text-gray text-sm">
+                    Thank you for your interest. Our team will get back to you
+                    shortly with details and pricing.
+                  </p>
+                  <button
+                    onClick={closeInquiryForm}
+                    className="mt-6 text-accent font-semibold hover:underline text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setInquirySubmitted(true);
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={inquiryData.name}
+                      onChange={(e) =>
+                        setInquiryData({ ...inquiryData, name: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={inquiryData.email}
+                      onChange={(e) =>
+                        setInquiryData({ ...inquiryData, email: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={inquiryData.phone}
+                      onChange={(e) =>
+                        setInquiryData({ ...inquiryData, phone: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                      placeholder="Your phone number"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Message
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={inquiryData.message}
+                      onChange={(e) =>
+                        setInquiryData({ ...inquiryData, message: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
+                      placeholder="Any specific requirements or questions..."
+                    />
+                  </div>
+                  {/* Product info (read-only) */}
+                  <div className="bg-section-bg rounded-lg p-4">
+                    <p className="text-xs text-text-gray uppercase tracking-wider mb-1">
+                      Inquiring About
+                    </p>
+                    <p className="text-sm font-semibold text-primary">
+                      {product.name}
+                    </p>
+                    <p className="text-xs text-text-gray">
+                      {product.manufacturer} — {product.categoryTitle}
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FiSend size={14} />
+                    Submit Inquiry
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>

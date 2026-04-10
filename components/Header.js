@@ -2,6 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FiPhone, FiMail, FiChevronDown, FiMenu, FiX, FiShoppingCart } from "react-icons/fi";
 import { useInquiryCart } from "@/lib/InquiryCartContext";
+import GlobalSearch from "@/components/GlobalSearch";
 import {
   FaFacebookF,
   FaLinkedinIn,
@@ -94,6 +95,7 @@ export default function Header() {
             </a>
           </div>
           <div className="flex items-center gap-4">
+            <GlobalSearch />
             <Link
               href="/inquiry-cart"
               className="relative text-white p-1 hover:text-accent transition-colors"

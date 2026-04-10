@@ -15,11 +15,17 @@ export default function CareersPage() {
   const [openAccordion, setOpenAccordion] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [cvSubmitted, setCvSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     position: "",
+  });
+  const [cvFormData, setCvFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
   });
 
   const toggleAccordion = (index) => {
@@ -73,120 +79,251 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Apply For Jobs - Accordion */}
-      <section className="py-16 bg-section-bg">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Apply For Jobs
-            </h2>
-            <div className="w-16 h-1 bg-accent mx-auto" />
-          </div>
+      {/* Job Listings */}
+      {jobOpenings.length > 0 && (
+        <section className="py-16 bg-section-bg">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+                Current Openings
+              </h2>
+              <div className="w-16 h-1 bg-accent mx-auto" />
+            </div>
 
-          <div className="space-y-4">
-            {jobOpenings.map((job, i) => {
-              const isOpen = openAccordion === i;
-              return (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-                >
-                  <button
-                    onClick={() => toggleAccordion(i)}
-                    className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-8 bg-accent rounded-full shrink-0" />
-                      <h3 className="text-primary font-bold text-base md:text-lg">
-                        {job.title}
-                      </h3>
-                    </div>
-                    <FiChevronDown
-                      size={20}
-                      className={`text-primary shrink-0 transition-transform duration-300 ${
-                        isOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
+            <div className="space-y-4">
+              {jobOpenings.map((job, i) => {
+                const isOpen = openAccordion === i;
+                return (
                   <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      isOpen
-                        ? "grid-rows-[1fr] opacity-100"
-                        : "grid-rows-[0fr] opacity-0"
-                    }`}
+                    key={i}
+                    className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
                   >
-                    <div className="overflow-hidden">
-                      <div className="px-6 pb-6 pt-2">
-                        {/* Location info */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-text-gray mb-5">
-                          <span className="flex items-center gap-1.5">
-                            <FiMapPin size={14} className="text-accent" />
-                            <strong>Job Location:</strong> {job.location}
-                          </span>
-                          <span>
-                            <strong>Nationality:</strong> {job.nationality}
-                          </span>
-                        </div>
+                    <button
+                      onClick={() => toggleAccordion(i)}
+                      className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-8 bg-accent rounded-full shrink-0" />
+                        <h3 className="text-primary font-bold text-base md:text-lg">
+                          {job.title}
+                        </h3>
+                      </div>
+                      <FiChevronDown
+                        size={20}
+                        className={`text-primary shrink-0 transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
 
-                        {/* Content blocks */}
-                        {job.content.map((block, bi) => (
-                          <div key={bi} className="mb-4">
-                            {block.heading && (
-                              <p className="text-primary font-semibold text-sm mb-2">
-                                {block.heading}
-                              </p>
-                            )}
-                            {block.text && (
-                              <p
-                                className="text-text-gray text-sm leading-relaxed mb-2"
-                                dangerouslySetInnerHTML={{
-                                  __html: block.text
-                                    .replace(
+                    <div
+                      className={`grid transition-all duration-300 ease-in-out ${
+                        isOpen
+                          ? "grid-rows-[1fr] opacity-100"
+                          : "grid-rows-[0fr] opacity-0"
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="px-6 pb-6 pt-2">
+                          {/* Location info */}
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-text-gray mb-5">
+                            <span className="flex items-center gap-1.5">
+                              <FiMapPin size={14} className="text-accent" />
+                              <strong>Job Location:</strong> {job.location}
+                            </span>
+                            <span>
+                              <strong>Nationality:</strong> {job.nationality}
+                            </span>
+                          </div>
+
+                          {/* Content blocks */}
+                          {job.content.map((block, bi) => (
+                            <div key={bi} className="mb-4">
+                              {block.heading && (
+                                <p className="text-primary font-semibold text-sm mb-2">
+                                  {block.heading}
+                                </p>
+                              )}
+                              {block.text && (
+                                <p
+                                  className="text-text-gray text-sm leading-relaxed mb-2"
+                                  dangerouslySetInnerHTML={{
+                                    __html: block.text.replace(
                                       /\*\*(.*?)\*\*/g,
                                       "<strong>$1</strong>"
                                     ),
-                                }}
-                              />
-                            )}
-                            {block.items && (
-                              <ul className="space-y-1.5">
-                                {block.items.map((item, ii) => (
-                                  <li
-                                    key={ii}
-                                    className="flex items-start gap-2.5 text-text-gray text-sm leading-relaxed"
-                                  >
-                                    <span className="text-accent mt-1.5 shrink-0">
-                                      &bull;
-                                    </span>
-                                    {item}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
+                                  }}
+                                />
+                              )}
+                              {block.items && (
+                                <ul className="space-y-1.5">
+                                  {block.items.map((item, ii) => (
+                                    <li
+                                      key={ii}
+                                      className="flex items-start gap-2.5 text-text-gray text-sm leading-relaxed"
+                                    >
+                                      <span className="text-accent mt-1.5 shrink-0">
+                                        &bull;
+                                      </span>
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ))}
 
-                        {/* Apply button */}
-                        <button
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              position: job.title,
-                            }));
-                            setShowForm(true);
-                          }}
-                          className="mt-4 inline-flex items-center gap-2 bg-accent hover:bg-accent/80 text-white font-semibold px-6 py-2.5 rounded-lg text-sm uppercase tracking-wider transition-colors"
-                        >
-                          <FiSend size={14} />
-                          Apply Now
-                        </button>
+                          {/* Apply button */}
+                          <button
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                position: job.title,
+                              }));
+                              setShowForm(true);
+                            }}
+                            className="mt-4 inline-flex items-center gap-2 bg-accent hover:bg-accent/80 text-white font-semibold px-6 py-2.5 rounded-lg text-sm uppercase tracking-wider transition-colors"
+                          >
+                            <FiSend size={14} />
+                            Apply Now
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Common CV Submission Form — always visible */}
+      <section className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+              Submit Your CV
+            </h2>
+            <div className="w-16 h-1 bg-accent mx-auto mb-6" />
+            <p className="text-text-gray leading-relaxed max-w-2xl mx-auto">
+              {jobOpenings.length > 0
+                ? "Don\u2019t see a role that fits? Submit your CV and our HR team will reach out when a suitable opportunity arises."
+                : "There are no specific openings at the moment, but we\u2019re always looking for talented individuals. Drop your CV below and our HR team will reach out if a suitable opportunity arises."}
+            </p>
+          </div>
+
+          <div className="bg-section-bg rounded-2xl shadow-sm border border-gray-200 overflow-hidden max-w-2xl mx-auto">
+            <div className="p-8 md:p-10">
+              {cvSubmitted ? (
+                <div className="text-center py-8">
+                  <FiCheckCircle
+                    size={48}
+                    className="text-green-500 mx-auto mb-4"
+                  />
+                  <h4 className="text-xl font-bold text-primary mb-2">
+                    CV Submitted Successfully!
+                  </h4>
+                  <p className="text-text-gray text-sm">
+                    Thank you for your interest in KDU. Our HR team will review
+                    your CV and contact you if you match any current or future
+                    openings.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setCvSubmitted(false);
+                      setCvFormData({ name: "", email: "", phone: "" });
+                    }}
+                    className="mt-6 text-accent font-semibold hover:underline text-sm"
+                  >
+                    Submit Another CV
+                  </button>
                 </div>
-              );
-            })}
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setCvSubmitted(true);
+                  }}
+                  className="space-y-5"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={cvFormData.name}
+                      onChange={(e) =>
+                        setCvFormData({ ...cvFormData, name: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white"
+                      placeholder="Enter Your Name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={cvFormData.email}
+                      onChange={(e) =>
+                        setCvFormData({ ...cvFormData, email: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white"
+                      placeholder="Enter Email Address"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={cvFormData.phone}
+                      onChange={(e) =>
+                        setCvFormData({ ...cvFormData, phone: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white"
+                      placeholder="Enter Your Phone No."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-1">
+                      Upload CV <span className="text-red-500">*</span>
+                    </label>
+                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center hover:border-accent/50 transition-colors cursor-pointer block bg-white">
+                      <FiUpload
+                        size={24}
+                        className="text-text-gray mx-auto mb-2"
+                      />
+                      <p className="text-text-gray text-sm">
+                        Click to upload your CV
+                      </p>
+                      <p className="text-text-gray text-xs mt-1">
+                        PDF, DOC, DOCX — Maximum file size: 2 MB
+                      </p>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-accent hover:bg-accent/80 text-white font-semibold py-3 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FiSend size={14} />
+                    Submit CV
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </section>
