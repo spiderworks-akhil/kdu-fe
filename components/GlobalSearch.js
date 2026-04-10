@@ -8,6 +8,7 @@ import { blogPosts } from "@/lib/blogData";
 import { newsPosts } from "@/lib/newsData";
 import { events } from "@/lib/eventData";
 import { jobOpenings } from "@/lib/careerData";
+import { caseStudies } from "@/lib/caseStudyData";
 
 function toSlug(str) {
   return str
@@ -105,6 +106,16 @@ function buildSearchIndex() {
       description: `${job.location} — ${job.type}`,
       href: "/careers",
       category: "Careers",
+    });
+  });
+
+  // Case Studies
+  caseStudies.forEach((cs) => {
+    items.push({
+      title: cs.title,
+      description: cs.excerpt || "",
+      href: `/case-studies/${cs.slug}`,
+      category: "Case Studies",
     });
   });
 

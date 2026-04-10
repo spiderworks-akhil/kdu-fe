@@ -87,6 +87,8 @@ export default function Footer() {
                 "Partners",
                 "Privacy Policy",
                 "Careers",
+                "Case Studies",
+                "FAQ",
               ].map((item) => (
                 <li key={item}>
                   <Link

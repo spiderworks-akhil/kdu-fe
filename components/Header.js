@@ -62,9 +62,11 @@ const navItems = [
       { label: "News", href: "/media/news" },
       { label: "Events", href: "/media/events" },
       { label: "Blogs", href: "/media/blogs" },
+      { label: "Case Studies", href: "/case-studies" },
     ],
   },
   { label: "Careers", href: "/careers" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact Us", href: "/contact" },
 ];
 
